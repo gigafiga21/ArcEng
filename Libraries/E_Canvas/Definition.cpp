@@ -7,10 +7,10 @@ class E_Canvas : public Fl_Widget
 {
     private:
 
-        int iStrokeStep, iLineWeight, iBorder,
+        int iStrokeStep, iLineWeight, iWallWeight,
             iLeft, iTop, iWidth, iHeight,
             iCanvasLeft, iCanvasTop, iCanvasWidth, iCanvasHeight;
-        vector<Point> aLines;
+        std::vector<Point> aBoundaryLines;
 
         void strokeRect(int iLeft, int iTop, int iWidth, int iHeight)
         {
@@ -35,7 +35,7 @@ class E_Canvas : public Fl_Widget
         {
             iStrokeStep = 5;
             iLineWeight = 2;
-            iBorder = 10;
+            iWallWeight = 5;
 
             iLeft = iGivenLeft + iLineWeight;
             iTop = iGivenTop + iLineWeight;
@@ -46,18 +46,24 @@ class E_Canvas : public Fl_Widget
             iCanvasTop = (iHeight - 265) / 2;
             iCanvasWidth = iWidth - 60;
             iCanvasHeight = 265;
+
+            aBoundaryLines.push_back({0, 0});
+            aBoundaryLines.push_back({iCanvasWidth, 0});
+            aBoundaryLines.push_back({iCanvasWidth, iCanvasHeight});
+            aBoundaryLines.push_back({0, iCanvasHeight});
+
+            aBoundaryLines.push_back({-1, -1});
+
+            aBoundaryLines.push_back({iWallWeight, iWallWeight});
+            aBoundaryLines.push_back({iCanvasWidth - iWallWeight, iWallWeight});
+            aBoundaryLines.push_back({iCanvasWidth - iWallWeight, iCanvasHeight - iWallWeight});
+            aBoundaryLines.push_back({iWallWeight, iCanvasHeight - iWallWeight});
         }
 
         void draw()
         {
             fl_color(E_COLOR3);
-            fl_line_style(FL_SOLID, iLineWeight, NULL);
+            fl_line_style(FL_SOLID, iWallWeight, NULL);
 
-            fl_rect(iCanvasLeft, iCanvasTop, iCanvasWidth, iCanvasHeight);
-            strokeRect(iCanvasLeft, iCanvasTop, iCanvasWidth, iCanvasHeight);
-            fl_rectf(iCanvasLeft + iBorder, iCanvasTop + iBorder, iCanvasWidth - 2 * iBorder, iCanvasHeight - 2 * iBorder, E_COLOR1);
-
-            fl_color(E_COLOR3);
-            fl_rect(iCanvasLeft + iBorder, iCanvasTop + iBorder, iCanvasWidth - 2 * iBorder, iCanvasHeight - 2 * iBorder);
         }
 };
