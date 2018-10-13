@@ -7,7 +7,7 @@ class E_Canvas : public Fl_Widget
 {
     private:
 
-        int iStrokeStep, iLineWeight, iWallWeight,
+        int iStrokeStep, iLineWeight, iHalfWallWeight,
             iLeft, iTop, iWidth, iHeight,
             iCanvasLeft, iCanvasTop, iCanvasWidth, iCanvasHeight;
         std::vector<Point> aBoundaryLines;
@@ -35,7 +35,7 @@ class E_Canvas : public Fl_Widget
         {
             iStrokeStep = 5;
             iLineWeight = 2;
-            iWallWeight = 5;
+            iHalfWallWeight = 5;
 
             iLeft = iGivenLeft + iLineWeight;
             iTop = iGivenTop + iLineWeight;
@@ -47,23 +47,16 @@ class E_Canvas : public Fl_Widget
             iCanvasWidth = iWidth - 60;
             iCanvasHeight = 265;
 
-            aBoundaryLines.push_back({0, 0});
-            aBoundaryLines.push_back({iCanvasWidth, 0});
-            aBoundaryLines.push_back({iCanvasWidth, iCanvasHeight});
-            aBoundaryLines.push_back({0, iCanvasHeight});
-
-            aBoundaryLines.push_back({-1, -1});
-
-            aBoundaryLines.push_back({iWallWeight, iWallWeight});
-            aBoundaryLines.push_back({iCanvasWidth - iWallWeight, iWallWeight});
-            aBoundaryLines.push_back({iCanvasWidth - iWallWeight, iCanvasHeight - iWallWeight});
-            aBoundaryLines.push_back({iWallWeight, iCanvasHeight - iWallWeight});
+            aBoundaryLines.push_back({iHalfWallWeight, iHalfWallWeight});
+            aBoundaryLines.push_back({iCanvasWidth - 2 * iHalfWallWeight, iHalfWallWeight});
+            aBoundaryLines.push_back({iCanvasWidth - 2 * iHalfWallWeight, iCanvasHeight - 2 * iHalfWallWeight});
+            aBoundaryLines.push_back({iHalfWallWeight, iCanvasHeight - 2 * iHalfWallWeight});
         }
 
         void draw()
         {
             fl_color(E_COLOR3);
-            fl_line_style(FL_SOLID, iWallWeight, NULL);
+            fl_line_style(FL_SOLID, iHalfWallWeight, NULL);
 
         }
 };
