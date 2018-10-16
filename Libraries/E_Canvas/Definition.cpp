@@ -27,7 +27,7 @@ class E_Canvas : public Fl_Widget
             std::vector<BGPoint> vptFlatOuter = plgFlat.outer();
 
             fl_color(E_COLOR1);
-            fl_begin_polygon();
+            fl_begin_complex_polygon();
             fl_vertex(iCanvasLeft - 1, iCanvasTop - 1);
             fl_vertex(iCanvasLeft + iCanvasWidth + 1, iCanvasTop - 1);
             fl_vertex(iCanvasLeft + iCanvasWidth + 1, iCanvasTop + iCanvasHeight + 1);
@@ -40,7 +40,7 @@ class E_Canvas : public Fl_Widget
                 fl_vertex(vptFlatOuter[iCounter].x() + iCanvasLeft, vptFlatOuter[iCounter].y() + iCanvasTop);
             }
 
-            fl_end_polygon();
+            fl_end_complex_polygon();
 
             fl_color(E_COLOR3);
             fl_begin_loop();
