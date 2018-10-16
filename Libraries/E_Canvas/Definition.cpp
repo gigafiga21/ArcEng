@@ -52,18 +52,30 @@ class E_Canvas : public Fl_Widget
             fl_end_loop();
         }
 
-        void pushFlatInnersVerteces()
+        void pushFlatInnersVerteces(bool bFilled)
         {
             for (int iInnerIndex = 0; iInnerIndex < plgFlat.inners().size(); iInnerIndex++)
             {
                 std::vector<BGPoint> vptFlatInner = plgFlat.inners()[iInnerIndex];
+
+                if (!bFilled)
+                {
+                    fl_begin_loop();
+                }
 
                 for (int iCounter = 0; iCounter < vptFlatInner.size(); iCounter++)
                 {
                     fl_vertex(vptFlatInner[iCounter].x() + iCanvasLeft, vptFlatInner[iCounter].y() + iCanvasTop);
                 }
 
-                fl_gap();
+                if (!bFilled)
+                {
+                    fl_end_loop();
+                }
+                else
+                {
+                    fl_gap();
+                }
             }
         }
 
@@ -71,13 +83,11 @@ class E_Canvas : public Fl_Widget
         {
             fl_color(E_COLOR1);
             fl_begin_complex_polygon();
-            pushFlatInnersVerteces();
+            pushFlatInnersVerteces(true);
             fl_end_complex_polygon();
 
             fl_color(E_COLOR3);
-            fl_begin_loop();
-            pushFlatInnersVerteces();
-            fl_end_loop();
+            pushFlatInnersVerteces(false);
         }
 
     public:
