@@ -7,8 +7,8 @@
 
     namespace BG = boost::geometry;
 
-    typedef BG::model::polygon<boost::geometry::model::d2::point_xy<int>> Polygon;
-    typedef BG::model::d2::point_xy<int> Point;
+    typedef BG::model::polygon<BG::model::d2::point_xy<int>> BGPolygon;
+    typedef BG::model::d2::point_xy<int> BGPoint;
 
 
     #include "Definition.cpp"

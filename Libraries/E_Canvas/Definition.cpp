@@ -8,7 +8,7 @@ class E_Canvas : public Fl_Widget
             iLeft, iTop, iWidth, iHeight,
             iCanvasLeft, iCanvasTop, iCanvasWidth, iCanvasHeight;
 
-        Polygon plgFlat;
+        BGPolygon plgFlat;
 
         void strokeFlat()
         {
@@ -24,10 +24,10 @@ class E_Canvas : public Fl_Widget
 
         void drawFlatOuter()
         {
-            std::vector<Point> vptFlatOuter = plgFlat.outer();
+            std::vector<BGPoint> vptFlatOuter = plgFlat.outer();
 
             fl_color(E_COLOR1);
-            fl_begin_polygon();
+            fl_begin_complex_polygon();
             fl_vertex(iCanvasLeft - 1, iCanvasTop - 1);
             fl_vertex(iCanvasLeft + iCanvasWidth + 1, iCanvasTop - 1);
             fl_vertex(iCanvasLeft + iCanvasWidth + 1, iCanvasTop + iCanvasHeight + 1);
@@ -40,7 +40,7 @@ class E_Canvas : public Fl_Widget
                 fl_vertex(vptFlatOuter[iCounter].x() + iCanvasLeft, vptFlatOuter[iCounter].y() + iCanvasTop);
             }
 
-            fl_end_polygon();
+            fl_end_complex_polygon();
 
             fl_color(E_COLOR3);
             fl_begin_loop();
@@ -52,32 +52,42 @@ class E_Canvas : public Fl_Widget
             fl_end_loop();
         }
 
-        void pushFlatInnersVerteces()
+        void pushFlatInnersVerteces(bool bFilled)
         {
             for (int iInnerIndex = 0; iInnerIndex < plgFlat.inners().size(); iInnerIndex++)
             {
-                std::vector<Point> vptFlatInner = plgFlat.inners()[iInnerIndex];
+                std::vector<BGPoint> vptFlatInner = plgFlat.inners()[iInnerIndex];
+
+                if (!bFilled)
+                {
+                    fl_begin_loop();
+                }
 
                 for (int iCounter = 0; iCounter < vptFlatInner.size(); iCounter++)
                 {
                     fl_vertex(vptFlatInner[iCounter].x() + iCanvasLeft, vptFlatInner[iCounter].y() + iCanvasTop);
                 }
 
-                fl_gap();
+                if (!bFilled)
+                {
+                    fl_end_loop();
+                }
+                else
+                {
+                    fl_gap();
+                }
             }
         }
 
         void drawFlatInners()
         {
             fl_color(E_COLOR1);
-            fl_begin_polygon();
-            pushFlatInnersVerteces();
-            fl_end_polygon();
+            fl_begin_complex_polygon();
+            pushFlatInnersVerteces(true);
+            fl_end_complex_polygon();
 
             fl_color(E_COLOR3);
-            fl_begin_loop();
-            pushFlatInnersVerteces();
-            fl_end_loop();
+            pushFlatInnersVerteces(false);
         }
 
     public:
@@ -103,18 +113,18 @@ class E_Canvas : public Fl_Widget
             iCanvasWidth = iWidth - 60;
             iCanvasHeight = 265;
 
-            BG::append(plgFlat.outer(), Point(0, 0));
-            BG::append(plgFlat.outer(), Point(iCanvasWidth, 0));
-            BG::append(plgFlat.outer(), Point(iCanvasWidth, iCanvasHeight));
-            BG::append(plgFlat.outer(), Point(0, iCanvasHeight));
-            BG::append(plgFlat.outer(), Point(0, 0));
+            BG::append(plgFlat.outer(), BGPoint(0, 0));
+            BG::append(plgFlat.outer(), BGPoint(iCanvasWidth, 0));
+            BG::append(plgFlat.outer(), BGPoint(iCanvasWidth, iCanvasHeight));
+            BG::append(plgFlat.outer(), BGPoint(0, iCanvasHeight));
+            BG::append(plgFlat.outer(), BGPoint(0, 0));
 
             plgFlat.inners().resize(1);
-            BG::append(plgFlat.inners()[0], Point(iWallWeight, iWallWeight));
-            BG::append(plgFlat.inners()[0], Point(iCanvasWidth - iWallWeight, iWallWeight));
-            BG::append(plgFlat.inners()[0], Point(iCanvasWidth - iWallWeight, iCanvasHeight - iWallWeight));
-            BG::append(plgFlat.inners()[0], Point(iWallWeight, iCanvasHeight - iWallWeight));
-            BG::append(plgFlat.inners()[0], Point(iWallWeight, iWallWeight));
+            BG::append(plgFlat.inners()[0], BGPoint(iWallWeight, iWallWeight));
+            BG::append(plgFlat.inners()[0], BGPoint(iCanvasWidth - iWallWeight, iWallWeight));
+            BG::append(plgFlat.inners()[0], BGPoint(iCanvasWidth - iWallWeight, iCanvasHeight - iWallWeight));
+            BG::append(plgFlat.inners()[0], BGPoint(iWallWeight, iCanvasHeight - iWallWeight));
+            BG::append(plgFlat.inners()[0], BGPoint(iWallWeight, iWallWeight));
         }
 
         void draw()
