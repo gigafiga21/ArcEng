@@ -70,9 +70,9 @@ class E_Canvas : public Fl_Widget
         void drawFlatInners()
         {
             fl_color(E_COLOR1);
-            fl_begin_polygon();
+            fl_begin_complex_polygon();
             pushFlatInnersVerteces();
-            fl_end_polygon();
+            fl_end_complex_polygon();
 
             fl_color(E_COLOR3);
             fl_begin_loop();
