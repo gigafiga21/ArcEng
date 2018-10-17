@@ -4,14 +4,42 @@ class E_Canvas : public Fl_Widget
 {
     private:
 
-        int iStrokeStep, iLineWeight, iWallWeight,
+        int iStrokeStep, iLineWeight, iWallWeight, iWebStep,
             iLeft, iTop, iWidth, iHeight,
             iCanvasLeft, iCanvasTop, iCanvasWidth, iCanvasHeight;
 
         BGPolygon plgFlat;
 
+        void drawWeb()
+        {
+            fl_color(E_COLOR2);
+            fl_line_style(FL_SOLID, 1, NULL);
+
+            for (int iInnerIndex = 0; iInnerIndex < plgFlat.inners().size(); iInnerIndex++)
+            {
+                BGPolygon plgFlatInner;
+                BG::assign_points(plgFlatInner, plgFlat.inners()[iInnerIndex]);
+
+                for (int iCounter = iWebStep; iCounter < iCanvasWidth; iCounter += iWebStep)
+                {
+                    BGPolyLine lnWebLine{BGPoint(iCounter, 0), BGPoint(iCounter, iCanvasHeight)};
+                    std::vector<BGPoint> vptClippedWebLine;
+                    BG::intersection(lnWebLine, plgFlatInner, vptClippedWebLine);
+
+                    for (int iCounterClipped = 0; iCounterClipped < vptClippedWebLine.size(); iCounterClipped += 2)
+                    {
+                        BGPoint ptA = vptClippedWebLine[iCounterClipped],
+                                ptB = vptClippedWebLine[iCounterClipped + 1];
+
+                        fl_line(ptA.x() + iCanvasLeft, ptA.y() + iCanvasTop, ptB.x() + iCanvasLeft, ptB.y() + iCanvasTop);
+                    }
+                }
+            }
+        }
+
         void strokeFlat()
         {
+            fl_color(E_COLOR3);
             fl_push_clip(iCanvasLeft, iCanvasTop, iCanvasWidth, iCanvasHeight);
 
             for (int iCounter = 0; iCounter < iCanvasWidth + iCanvasHeight; iCounter += iStrokeStep)
@@ -100,6 +128,7 @@ class E_Canvas : public Fl_Widget
             sGivenLabel)
         {
             iStrokeStep = 5;
+            iWebStep = 5;
             iLineWeight = 2;
             iWallWeight = 8;
 
@@ -131,9 +160,9 @@ class E_Canvas : public Fl_Widget
         {
             fl_line_style(FL_SOLID, iLineWeight, NULL);
 
-            fl_color(E_COLOR3);
             strokeFlat();
-            drawFlatOuter();
             drawFlatInners();
+            drawFlatOuter();
+            drawWeb();
         }
 };
