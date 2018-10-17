@@ -147,7 +147,7 @@ class E_Canvas : public Fl_Widget
             sGivenLabel)
         {
             iStrokeStep = 5;
-            iWebStep = 5;
+            iWebStep = 4;
             iLineWeight = 2;
             iWallWeight = 8;
 
