@@ -47,6 +47,12 @@ class E_Canvas : public Fl_Widget
                     BGPolyLine lnWebLine{BGPoint(iCounter, 0), BGPoint(iCounter, iCanvasHeight)};
                     drawWebLines(&plgFlatInner, &lnWebLine, 0, iCounter);
                 }
+
+                for (int iCounter = iWebStep; iCounter < iCanvasHeight; iCounter += iWebStep)
+                {
+                    BGPolyLine lnWebLine{BGPoint(0, iCounter), BGPoint(iCanvasWidth, iCounter)};
+                    drawWebLines(&plgFlatInner, &lnWebLine, 1, iCounter);
+                }
             }
         }
 
