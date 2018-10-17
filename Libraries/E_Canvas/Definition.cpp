@@ -19,14 +19,16 @@ class E_Canvas : public Fl_Widget
             {
                 BGPoint ptA = vptClippedWebLine[iCounterClipped],
                         ptB = vptClippedWebLine[iCounterClipped + 1];
-                int iHalfLineWeight = iLineWeight / 2;
+                int iDelta = iLineWeight / 2;
 
-                fl_line(
-                    ptA.x() + iCanvasLeft + iHalfLineWeight,
-                    ptA.y() + iCanvasTop + iHalfLineWeight,
-                    ptB.x() + iCanvasLeft + iHalfLineWeight,
-                    ptB.y() + iCanvasTop - iHalfLineWeight
-                );
+                if (iHorisontal)
+                {
+                    fl_line(ptA.x() + iCanvasLeft + iDelta, ptA.y() + iCanvasTop, ptB.x() + iCanvasLeft - iDelta, ptB.y() + iCanvasTop);
+                }
+                else
+                {
+                    fl_line(ptA.x() + iCanvasLeft, ptA.y() + iCanvasTop + iDelta, ptB.x() + iCanvasLeft, ptB.y() + iCanvasTop - iDelta);
+                }
             }
         }
 
@@ -43,7 +45,7 @@ class E_Canvas : public Fl_Widget
                 for (int iCounter = iWebStep; iCounter < iCanvasWidth; iCounter += iWebStep)
                 {
                     BGPolyLine lnWebLine{BGPoint(iCounter, 0), BGPoint(iCounter, iCanvasHeight)};
-                    drawWebLines(&plgFlatInner, &lnWebLine, 1, iCounter);
+                    drawWebLines(&plgFlatInner, &lnWebLine, 0, iCounter);
                 }
             }
         }
