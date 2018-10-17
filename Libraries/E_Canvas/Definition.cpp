@@ -4,7 +4,7 @@ class E_Canvas : public Fl_Widget
 {
     private:
 
-        int iStrokeStep, iLineWeight, iWallWeight, iWebStep,
+        int iStrokeStep, iLineWeight, iWebLineWeight, iWallWeight, iWebStep,
             iLeft, iTop, iWidth, iHeight,
             iCanvasLeft, iCanvasTop, iCanvasWidth, iCanvasHeight;
 
@@ -34,9 +34,6 @@ class E_Canvas : public Fl_Widget
 
         void drawWeb()
         {
-            fl_color(E_COLOR2);
-            fl_line_style(FL_SOLID, 1, NULL);
-
             for (int iInnerIndex = 0; iInnerIndex < plgFlat.inners().size(); iInnerIndex++)
             {
                 BGPolygon plgFlatInner;
@@ -58,7 +55,6 @@ class E_Canvas : public Fl_Widget
 
         void strokeFlat()
         {
-            fl_color(E_COLOR3);
             fl_push_clip(iCanvasLeft, iCanvasTop, iCanvasWidth, iCanvasHeight);
 
             for (int iCounter = 0; iCounter < iCanvasWidth + iCanvasHeight; iCounter += iStrokeStep)
@@ -147,6 +143,7 @@ class E_Canvas : public Fl_Widget
         {
             iStrokeStep = 5;
             iWebStep = 4;
+            iWebLineWeight = 1;
             iLineWeight = 2;
             iWallWeight = 8;
 
@@ -176,16 +173,22 @@ class E_Canvas : public Fl_Widget
 
         void draw()
         {
+            fl_color(E_COLOR3);
             fl_line_style(FL_SOLID, iLineWeight, NULL);
-
             strokeFlat();
 
             fl_color(E_COLOR1);
             drawFlatInners(true);
+
+            fl_color(E_COLOR2);
+            fl_line_style(FL_SOLID, iWebLineWeight, NULL);
             drawWeb();
 
             fl_color(E_COLOR3);
+            fl_line_style(FL_SOLID, iLineWeight, NULL);
             drawFlatInners(false);
+
+            fl_color(E_COLOR1);
             drawFlatOuter();
         }
 };
