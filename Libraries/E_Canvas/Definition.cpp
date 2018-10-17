@@ -10,7 +10,7 @@ class E_Canvas : public Fl_Widget
 
         BGPolygon plgFlat;
 
-        void drawWebLines(BGPolygon* plgFlatInner, BGPolyLine* lnWebLine, int iHorisontal, int iCurrentPosition)
+        void drawWebLines(BGPolygon* plgFlatInner, BGPolyLine* lnWebLine, int iHorisontal)
         {
             std::vector<BGPoint> vptClippedWebLine;
             BG::intersection(*lnWebLine, *plgFlatInner, vptClippedWebLine);
@@ -23,7 +23,7 @@ class E_Canvas : public Fl_Widget
 
                 if (iHorisontal)
                 {
-                    fl_line(ptA.x() + iCanvasLeft + iDelta, ptA.y() + iCanvasTop, ptB.x() + iCanvasLeft - iDelta, ptB.y() + iCanvasTop);
+                    fl_line(ptA.x() + iCanvasLeft, ptA.y() + iCanvasTop, ptB.x() + iCanvasLeft - iDelta, ptB.y() + iCanvasTop);
                 }
                 else
                 {
@@ -45,13 +45,13 @@ class E_Canvas : public Fl_Widget
                 for (int iCounter = iWebStep; iCounter < iCanvasWidth; iCounter += iWebStep)
                 {
                     BGPolyLine lnWebLine{BGPoint(iCounter, 0), BGPoint(iCounter, iCanvasHeight)};
-                    drawWebLines(&plgFlatInner, &lnWebLine, 0, iCounter);
+                    drawWebLines(&plgFlatInner, &lnWebLine, 0);
                 }
 
                 for (int iCounter = iWebStep; iCounter < iCanvasHeight; iCounter += iWebStep)
                 {
                     BGPolyLine lnWebLine{BGPoint(0, iCounter), BGPoint(iCanvasWidth, iCounter)};
-                    drawWebLines(&plgFlatInner, &lnWebLine, 1, iCounter);
+                    drawWebLines(&plgFlatInner, &lnWebLine, 1);
                 }
             }
         }
