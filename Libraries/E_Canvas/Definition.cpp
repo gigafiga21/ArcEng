@@ -99,8 +99,13 @@ class E_Canvas : public Fl_Widget
             fl_end_loop();
         }
 
-        void pushFlatInnersVerteces(bool bFilled)
+        void drawFlatInners(bool bFilled)
         {
+            if (bFilled)
+            {
+                fl_begin_complex_polygon();
+            }
+
             for (int iInnerIndex = 0; iInnerIndex < plgFlat.inners().size(); iInnerIndex++)
             {
                 std::vector<BGPoint> vptFlatInner = plgFlat.inners()[iInnerIndex];
@@ -124,17 +129,11 @@ class E_Canvas : public Fl_Widget
                     fl_gap();
                 }
             }
-        }
 
-        void drawFlatInners()
-        {
-            fl_color(E_COLOR1);
-            fl_begin_complex_polygon();
-            pushFlatInnersVerteces(true);
-            fl_end_complex_polygon();
-
-            fl_color(E_COLOR3);
-            pushFlatInnersVerteces(false);
+            if (bFilled)
+            {
+                fl_end_complex_polygon();
+            }
         }
 
     public:
@@ -180,8 +179,13 @@ class E_Canvas : public Fl_Widget
             fl_line_style(FL_SOLID, iLineWeight, NULL);
 
             strokeFlat();
-            drawFlatInners();
-            drawFlatOuter();
+
+            fl_color(E_COLOR1);
+            drawFlatInners(true);
             drawWeb();
+
+            fl_color(E_COLOR3);
+            drawFlatInners(false);
+            drawFlatOuter();
         }
 };
