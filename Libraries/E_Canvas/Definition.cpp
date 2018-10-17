@@ -23,7 +23,7 @@ class E_Canvas : public Fl_Widget
 
                 if (iHorisontal)
                 {
-                    fl_line(ptA.x() + iCanvasLeft, ptA.y() + iCanvasTop, ptB.x() + iCanvasLeft - iDelta, ptB.y() + iCanvasTop);
+                    fl_line(ptA.x() + iCanvasLeft - iDelta, ptA.y() + iCanvasTop, ptB.x() + iCanvasLeft + iDelta, ptB.y() + iCanvasTop);
                 }
                 else
                 {
