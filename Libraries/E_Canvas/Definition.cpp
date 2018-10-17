@@ -30,8 +30,14 @@ class E_Canvas : public Fl_Widget
                     {
                         BGPoint ptA = vptClippedWebLine[iCounterClipped],
                                 ptB = vptClippedWebLine[iCounterClipped + 1];
+                        int iHalfLineWeight = iLineWeight / 2;
 
-                        fl_line(ptA.x() + iCanvasLeft, ptA.y() + iCanvasTop, ptB.x() + iCanvasLeft, ptB.y() + iCanvasTop);
+                        fl_line(
+                            ptA.x() + iCanvasLeft + iHalfLineWeight,
+                            ptA.y() + iCanvasTop + iHalfLineWeight,
+                            ptB.x() + iCanvasLeft + iHalfLineWeight,
+                            ptB.y() + iCanvasTop - iHalfLineWeight
+                        );
                     }
                 }
             }
