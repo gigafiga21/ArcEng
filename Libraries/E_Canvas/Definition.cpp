@@ -10,6 +10,26 @@ class E_Canvas : public Fl_Widget
 
         BGPolygon plgFlat;
 
+        void drawWebLines(BGPolygon* plgFlatInner, BGPolyLine* lnWebLine, int iHorisontal, int iCurrentPosition)
+        {
+            std::vector<BGPoint> vptClippedWebLine;
+            BG::intersection(*lnWebLine, *plgFlatInner, vptClippedWebLine);
+
+            for (int iCounterClipped = 0; iCounterClipped < vptClippedWebLine.size(); iCounterClipped += 2)
+            {
+                BGPoint ptA = vptClippedWebLine[iCounterClipped],
+                        ptB = vptClippedWebLine[iCounterClipped + 1];
+                int iHalfLineWeight = iLineWeight / 2;
+
+                fl_line(
+                    ptA.x() + iCanvasLeft + iHalfLineWeight,
+                    ptA.y() + iCanvasTop + iHalfLineWeight,
+                    ptB.x() + iCanvasLeft + iHalfLineWeight,
+                    ptB.y() + iCanvasTop - iHalfLineWeight
+                );
+            }
+        }
+
         void drawWeb()
         {
             fl_color(E_COLOR2);
@@ -23,22 +43,7 @@ class E_Canvas : public Fl_Widget
                 for (int iCounter = iWebStep; iCounter < iCanvasWidth; iCounter += iWebStep)
                 {
                     BGPolyLine lnWebLine{BGPoint(iCounter, 0), BGPoint(iCounter, iCanvasHeight)};
-                    std::vector<BGPoint> vptClippedWebLine;
-                    BG::intersection(lnWebLine, plgFlatInner, vptClippedWebLine);
-
-                    for (int iCounterClipped = 0; iCounterClipped < vptClippedWebLine.size(); iCounterClipped += 2)
-                    {
-                        BGPoint ptA = vptClippedWebLine[iCounterClipped],
-                                ptB = vptClippedWebLine[iCounterClipped + 1];
-                        int iHalfLineWeight = iLineWeight / 2;
-
-                        fl_line(
-                            ptA.x() + iCanvasLeft + iHalfLineWeight,
-                            ptA.y() + iCanvasTop + iHalfLineWeight,
-                            ptB.x() + iCanvasLeft + iHalfLineWeight,
-                            ptB.y() + iCanvasTop - iHalfLineWeight
-                        );
-                    }
+                    drawWebLines(&plgFlatInner, &lnWebLine, 1, iCounter);
                 }
             }
         }
