@@ -1,4 +1,5 @@
 #include <iostream>
+#include <vector>
 
 class E_Canvas : public Fl_Widget
 {
@@ -54,7 +55,7 @@ class E_Canvas : public Fl_Widget
             }
         }
 
-        void strokeFlat()
+        /**void strokeFlat()
         {
             fl_push_clip(iCanvasLeft, iCanvasTop, iCanvasWidth, iCanvasHeight);
 
@@ -64,7 +65,7 @@ class E_Canvas : public Fl_Widget
             }
 
             fl_pop_clip();
-        }
+        }*/
 
         void drawFlatOuter()
         {
@@ -133,6 +134,28 @@ class E_Canvas : public Fl_Widget
             }
         }
 
+        void strokeFlat()
+        {
+            for (int iCounter = 0; iCounter < iCanvasWidth + iCanvasHeight; iCounter += iStrokeStep)
+            {
+                BGPolyLine plnLine;
+                std::vector<BGPolyLine> aplnLines;
+
+                BG::append(plnLine, BGPoint(iCounter, -1));
+                BG::append(plnLine, BGPoint(-1, iCounter));
+                BG::intersection(plgFlat, plnLine, aplnLines);
+
+                for (int iLine = 0; iLine < aplnLines.size(); iLine++)
+                {
+                    fl_line(
+                        iCanvasLeft + aplnLines[iLine][0].x(),
+                        iCanvasTop + aplnLines[iLine][0].y(),
+                        iCanvasLeft + aplnLines[iLine][1].x(),
+                        iCanvasTop + aplnLines[iLine][1].y());
+                }
+            }
+        }
+
         bool updateBinder(int x, int y)
         {
             BGPolygon plgOuter;
@@ -196,9 +219,9 @@ class E_Canvas : public Fl_Widget
             pntBinder.y(-1);
 
             BG::append(plgFlat.outer(), BGPoint(0, 0));
-            BG::append(plgFlat.outer(), BGPoint(iCanvasWidth, 0));
-            BG::append(plgFlat.outer(), BGPoint(iCanvasWidth, iCanvasHeight));
             BG::append(plgFlat.outer(), BGPoint(0, iCanvasHeight));
+            BG::append(plgFlat.outer(), BGPoint(iCanvasWidth, iCanvasHeight));
+            BG::append(plgFlat.outer(), BGPoint(iCanvasWidth, 0));
             BG::append(plgFlat.outer(), BGPoint(0, 0));
 
             plgFlat.inners().resize(1);
@@ -215,7 +238,7 @@ class E_Canvas : public Fl_Widget
             fl_line_style(FL_SOLID, iLineWeight, NULL);
             strokeFlat();
 
-            fl_color(E_COLOR1);
+            /*fl_color(E_COLOR1);
             drawFlatInners(true);
 
             fl_color(E_COLOR2);
@@ -227,7 +250,7 @@ class E_Canvas : public Fl_Widget
             drawFlatInners(false);
 
             fl_color(E_COLOR1);
-            drawFlatOuter();
+            drawFlatOuter();*/
         }
 
     protected:
