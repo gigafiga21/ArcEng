@@ -9,6 +9,7 @@ class E_Canvas : public Fl_Widget
             iCanvasLeft, iCanvasTop, iCanvasWidth, iCanvasHeight;
 
         BGPolygon plgFlat;
+        BGPoint pntBinder;
 
         void drawWebLines(BGPolygon* plgFlatInner, BGPolyLine* lnWebLine, int iHorisontal)
         {
@@ -132,6 +133,40 @@ class E_Canvas : public Fl_Widget
             }
         }
 
+        bool updateBinder(int x, int y)
+        {
+            BGPolygon plgOuter;
+            BGPoint pntMouse(x, y);
+
+            for (int iCounter = 0; iCounter < plgFlat.outer().size(); iCounter++)
+            {
+                BG::append(plgOuter.outer(), plgFlat.outer()[iCounter]);
+            }
+
+            if (!BG::within(pntMouse, plgOuter))
+            {
+                return false;
+            }
+
+            bool changed = false;
+            pntMouse.x(pntMouse.x() - pntMouse.x() % iWebStep);
+            pntMouse.y(pntMouse.y() - pntMouse.y() % iWebStep);
+
+            if (pntMouse.x() != pntBinder.x())
+            {
+                changed = true;
+                pntBinder.x(pntMouse.x());
+            }
+
+            if (pntMouse.y() != pntBinder.y())
+            {
+                changed = true;
+                pntBinder.y(pntMouse.y());
+            }
+
+            return changed;
+        }
+
     public:
 
         E_Canvas(int iGivenLeft, int iGivenTop, int iGivenWidth, int iGivenHeight, const char* sGivenLabel) : Fl_Widget(
@@ -142,7 +177,7 @@ class E_Canvas : public Fl_Widget
             sGivenLabel)
         {
             iStrokeStep = 5;
-            iWebStep = 4;
+            iWebStep = 16;
             iWebLineWeight = 1;
             iLineWeight = 2;
             iWallWeight = 8;
@@ -152,10 +187,13 @@ class E_Canvas : public Fl_Widget
             iWidth = iGivenWidth;
             iHeight = iGivenHeight;
 
-            iCanvasLeft = iLeft + 30;
-            iCanvasTop = (iHeight - 265) / 2;
-            iCanvasWidth = iWidth - 60;
-            iCanvasHeight = 265;
+            iCanvasWidth = 384;
+            iCanvasHeight = 280;
+            iCanvasLeft = iLeft + (iWidth - iCanvasWidth) / 2;
+            iCanvasTop = iTop + (iHeight - iCanvasHeight) / 2;
+
+            pntBinder.x(-1);
+            pntBinder.y(-1);
 
             BG::append(plgFlat.outer(), BGPoint(0, 0));
             BG::append(plgFlat.outer(), BGPoint(iCanvasWidth, 0));
@@ -190,5 +228,23 @@ class E_Canvas : public Fl_Widget
 
             fl_color(E_COLOR1);
             drawFlatOuter();
+        }
+
+    protected:
+
+        int handle(int iEvent)
+        {
+            switch(iEvent)
+            {
+                case FL_ENTER:
+                    return 1;
+
+                case FL_MOVE:
+                    if (updateBinder(Fl::event_x(), Fl::event_y()))
+                    {
+                        redraw();
+                    }
+                    return 1;
+            }
         }
 };
