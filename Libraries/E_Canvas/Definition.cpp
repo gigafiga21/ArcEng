@@ -55,85 +55,6 @@ class E_Canvas : public Fl_Widget
             }
         }
 
-        /**void strokeFlat()
-        {
-            fl_push_clip(iCanvasLeft, iCanvasTop, iCanvasWidth, iCanvasHeight);
-
-            for (int iCounter = 0; iCounter < iCanvasWidth + iCanvasHeight; iCounter += iStrokeStep)
-            {
-                fl_line(iCanvasLeft + iCounter, iCanvasTop, iCanvasLeft, iCanvasTop + iCounter);
-            }
-
-            fl_pop_clip();
-        }*/
-
-        void drawFlatOuter()
-        {
-            std::vector<BGPoint> vptFlatOuter = plgFlat.outer();
-
-            fl_color(E_COLOR1);
-            fl_begin_complex_polygon();
-            fl_vertex(iCanvasLeft - 1, iCanvasTop - 1);
-            fl_vertex(iCanvasLeft + iCanvasWidth + 1, iCanvasTop - 1);
-            fl_vertex(iCanvasLeft + iCanvasWidth + 1, iCanvasTop + iCanvasHeight + 1);
-            fl_vertex(iCanvasLeft - 1, iCanvasTop + iCanvasHeight + 1);
-            fl_vertex(iCanvasLeft - 1, iCanvasTop - 1);
-            fl_gap();
-
-            for (int iCounter = 0; iCounter < vptFlatOuter.size(); iCounter++)
-            {
-                fl_vertex(vptFlatOuter[iCounter].x() + iCanvasLeft, vptFlatOuter[iCounter].y() + iCanvasTop);
-            }
-
-            fl_end_complex_polygon();
-
-            fl_color(E_COLOR3);
-            fl_begin_loop();
-            fl_vertex(iCanvasLeft, iCanvasTop);
-            fl_vertex(iCanvasLeft + iCanvasWidth, iCanvasTop);
-            fl_vertex(iCanvasLeft + iCanvasWidth, iCanvasTop + iCanvasHeight);
-            fl_vertex(iCanvasLeft, iCanvasTop + iCanvasHeight);
-            fl_vertex(iCanvasLeft, iCanvasTop);
-            fl_end_loop();
-        }
-
-        void drawFlatInners(bool bFilled)
-        {
-            if (bFilled)
-            {
-                fl_begin_complex_polygon();
-            }
-
-            for (int iInnerIndex = 0; iInnerIndex < plgFlat.inners().size(); iInnerIndex++)
-            {
-                std::vector<BGPoint> vptFlatInner = plgFlat.inners()[iInnerIndex];
-
-                if (!bFilled)
-                {
-                    fl_begin_loop();
-                }
-
-                for (int iCounter = 0; iCounter < vptFlatInner.size(); iCounter++)
-                {
-                    fl_vertex(vptFlatInner[iCounter].x() + iCanvasLeft, vptFlatInner[iCounter].y() + iCanvasTop);
-                }
-
-                if (!bFilled)
-                {
-                    fl_end_loop();
-                }
-                else
-                {
-                    fl_gap();
-                }
-            }
-
-            if (bFilled)
-            {
-                fl_end_complex_polygon();
-            }
-        }
-
         void strokeFlat()
         {
             for (int iCounter = 0; iCounter < iCanvasWidth + iCanvasHeight; iCounter += iStrokeStep)
@@ -153,6 +74,30 @@ class E_Canvas : public Fl_Widget
                         iCanvasLeft + aplnLines[iLine][1].x(),
                         iCanvasTop + aplnLines[iLine][1].y());
                 }
+            }
+        }
+
+        void drawFlat()
+        {
+            std::vector<BGPoint> apntOuter = plgFlat.outer();
+
+            fl_begin_loop();
+            for (int iVertex = 0; iVertex < apntOuter.size(); iVertex++)
+            {
+                fl_vertex(iCanvasLeft + apntOuter[iVertex].x(), iCanvasTop + apntOuter[iVertex].y());
+            }
+            fl_end_loop();
+
+            for (int iInner = 0; iInner < plgFlat.inners().size(); iInner++)
+            {
+                std::vector<BGPoint> apntInner = plgFlat.inners()[iInner];
+
+                fl_begin_loop();
+                for (int iVertex = 0; iVertex < apntOuter.size(); iVertex++)
+                {
+                    fl_vertex(iCanvasLeft + apntInner[iVertex].x(), iCanvasTop + apntInner[iVertex].y());
+                }
+                fl_end_loop();
             }
         }
 
@@ -237,6 +182,7 @@ class E_Canvas : public Fl_Widget
             fl_color(E_COLOR3);
             fl_line_style(FL_SOLID, iLineWeight, NULL);
             strokeFlat();
+            drawFlat();
 
             /*fl_color(E_COLOR1);
             drawFlatInners(true);
