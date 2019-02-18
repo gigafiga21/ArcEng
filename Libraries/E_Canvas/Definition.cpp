@@ -12,45 +12,43 @@ class E_Canvas : public Fl_Widget
         BGPolygon plgFlat;
         BGPoint pntBinder;
 
-        void drawWebLines(BGPolygon* plgFlatInner, BGPolyLine* lnWebLine, int iHorisontal)
+        void cropLine(BGPolygon plgPolygon, int x1, int y1, int x2, int y2)
         {
-            std::vector<BGPoint> vptClippedWebLine;
-            BG::intersection(*lnWebLine, *plgFlatInner, vptClippedWebLine);
+            BGPolyLine plnLine;
+            std::vector<BGPolyLine> aplnLines;
 
-            for (int iCounterClipped = 0; iCounterClipped < vptClippedWebLine.size(); iCounterClipped += 2)
+            BG::append(plnLine, BGPoint(x1, y1));
+            BG::append(plnLine, BGPoint(x2, y2));
+            BG::intersection(plgPolygon, plnLine, aplnLines);
+
+            for (int iLine = 0; iLine < aplnLines.size(); iLine++)
             {
-                BGPoint ptA = vptClippedWebLine[iCounterClipped],
-                        ptB = vptClippedWebLine[iCounterClipped + 1];
-                int iDelta = iLineWeight / 2;
-
-                if (iHorisontal)
-                {
-                    fl_line(ptA.x() + iCanvasLeft - iDelta, ptA.y() + iCanvasTop, ptB.x() + iCanvasLeft + iDelta, ptB.y() + iCanvasTop);
-                }
-                else
-                {
-                    fl_line(ptA.x() + iCanvasLeft, ptA.y() + iCanvasTop + iDelta, ptB.x() + iCanvasLeft, ptB.y() + iCanvasTop - iDelta);
-                }
+                fl_line(
+                    iCanvasLeft + aplnLines[iLine][0].x(),
+                    iCanvasTop + aplnLines[iLine][0].y(),
+                    iCanvasLeft + aplnLines[iLine][1].x(),
+                    iCanvasTop + aplnLines[iLine][1].y());
             }
         }
 
         void drawWeb()
         {
-            for (int iInnerIndex = 0; iInnerIndex < plgFlat.inners().size(); iInnerIndex++)
+            for (int iInner = 0; iInner < plgFlat.inners().size(); iInner++)
             {
-                BGPolygon plgFlatInner;
-                BG::assign_points(plgFlatInner, plgFlat.inners()[iInnerIndex]);
-
-                for (int iCounter = iWebStep; iCounter < iCanvasWidth; iCounter += iWebStep)
+                BGPolygon plgInner;
+                for (int iCounter = plgFlat.inners()[iInner].size() - 1; iCounter >= 0 ; iCounter--)
                 {
-                    BGPolyLine lnWebLine{BGPoint(iCounter, 0), BGPoint(iCounter, iCanvasHeight)};
-                    drawWebLines(&plgFlatInner, &lnWebLine, 0);
+                    BG::append(plgInner.outer(), plgFlat.inners()[iInner][iCounter]);
                 }
 
-                for (int iCounter = iWebStep; iCounter < iCanvasHeight; iCounter += iWebStep)
+                for (int iCoord = 0; iCoord < iCanvasWidth; iCoord += iWebStep)
                 {
-                    BGPolyLine lnWebLine{BGPoint(0, iCounter), BGPoint(iCanvasWidth, iCounter)};
-                    drawWebLines(&plgFlatInner, &lnWebLine, 1);
+                    cropLine(plgInner, iCoord, iLineWeight, iCoord, iCanvasHeight - 2 * iLineWeight);
+                }
+
+                for (int iCoord = 0; iCoord < iCanvasHeight - 2 * iLineWeight; iCoord += iWebStep)
+                {
+                    cropLine(plgInner, iLineWeight, iCoord, iCanvasWidth - iLineWeight, iCoord);
                 }
             }
         }
@@ -59,21 +57,7 @@ class E_Canvas : public Fl_Widget
         {
             for (int iCounter = 0; iCounter < iCanvasWidth + iCanvasHeight; iCounter += iStrokeStep)
             {
-                BGPolyLine plnLine;
-                std::vector<BGPolyLine> aplnLines;
-
-                BG::append(plnLine, BGPoint(iCounter, -1));
-                BG::append(plnLine, BGPoint(-1, iCounter));
-                BG::intersection(plgFlat, plnLine, aplnLines);
-
-                for (int iLine = 0; iLine < aplnLines.size(); iLine++)
-                {
-                    fl_line(
-                        iCanvasLeft + aplnLines[iLine][0].x(),
-                        iCanvasTop + aplnLines[iLine][0].y(),
-                        iCanvasLeft + aplnLines[iLine][1].x(),
-                        iCanvasTop + aplnLines[iLine][1].y());
-                }
+                cropLine(plgFlat, iCounter, 0, 0, iCounter);
             }
         }
 
@@ -179,24 +163,14 @@ class E_Canvas : public Fl_Widget
 
         void draw()
         {
-            fl_color(E_COLOR3);
-            fl_line_style(FL_SOLID, iLineWeight, NULL);
-            strokeFlat();
-            drawFlat();
-
-            /*fl_color(E_COLOR1);
-            drawFlatInners(true);
-
             fl_color(E_COLOR2);
             fl_line_style(FL_SOLID, iWebLineWeight, NULL);
             drawWeb();
 
             fl_color(E_COLOR3);
             fl_line_style(FL_SOLID, iLineWeight, NULL);
-            drawFlatInners(false);
-
-            fl_color(E_COLOR1);
-            drawFlatOuter();*/
+            strokeFlat();
+            drawFlat();
         }
 
     protected:
