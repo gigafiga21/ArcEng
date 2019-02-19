@@ -1,11 +1,12 @@
 #include <iostream>
 #include <vector>
+#include <cmath>
 
 class E_Canvas : public Fl_Widget
 {
     private:
 
-        int iStrokeStep, iLineWeight, iWebLineWeight, iWallWeight, iWebStep,
+        int iStrokeStep, iLineWeight, iWebLineWeight, iWallWeight, iWebStep, iBinderRadius,
             iLeft, iTop, iWidth, iHeight,
             iCanvasLeft, iCanvasTop, iCanvasWidth, iCanvasHeight;
 
@@ -88,7 +89,7 @@ class E_Canvas : public Fl_Widget
         bool updateBinder(int x, int y)
         {
             BGPolygon plgOuter;
-            BGPoint pntMouse(x, y);
+            BGPoint pntMouse(x - iCanvasLeft, y - iCanvasTop);
 
             for (int iCounter = 0; iCounter < plgFlat.outer().size(); iCounter++)
             {
@@ -101,8 +102,8 @@ class E_Canvas : public Fl_Widget
             }
 
             bool changed = false;
-            pntMouse.x(pntMouse.x() - pntMouse.x() % iWebStep);
-            pntMouse.y(pntMouse.y() - pntMouse.y() % iWebStep);
+            pntMouse.x(round((float)pntMouse.x() / iWebStep) * iWebStep);
+            pntMouse.y(round((float)pntMouse.y() / iWebStep) * iWebStep);
 
             if (pntMouse.x() != pntBinder.x())
             {
@@ -119,6 +120,19 @@ class E_Canvas : public Fl_Widget
             return changed;
         }
 
+        void drawBinder()
+        {
+            if (pntBinder.x() != -1)
+            {
+                fl_begin_complex_polygon();
+                fl_vertex(iCanvasLeft + pntBinder.x() - iBinderRadius, iCanvasTop + pntBinder.y());
+                fl_vertex(iCanvasLeft + pntBinder.x(), iCanvasTop + pntBinder.y() - iBinderRadius);
+                fl_vertex(iCanvasLeft + pntBinder.x() + iBinderRadius, iCanvasTop + pntBinder.y());
+                fl_vertex(iCanvasLeft + pntBinder.x(), iCanvasTop + pntBinder.y() + iBinderRadius);
+                fl_end_complex_polygon();
+            }
+        }
+
     public:
 
         E_Canvas(int iGivenLeft, int iGivenTop, int iGivenWidth, int iGivenHeight, const char* sGivenLabel) : Fl_Widget(
@@ -133,6 +147,7 @@ class E_Canvas : public Fl_Widget
             iWebLineWeight = 1;
             iLineWeight = 2;
             iWallWeight = 8;
+            iBinderRadius = 3;
 
             iLeft = iGivenLeft + iLineWeight;
             iTop = iGivenTop + iLineWeight;
@@ -171,6 +186,9 @@ class E_Canvas : public Fl_Widget
             fl_line_style(FL_SOLID, iLineWeight, NULL);
             strokeFlat();
             drawFlat();
+
+            fl_color(E_COLOR4);
+            drawBinder();
         }
 
     protected:
