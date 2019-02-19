@@ -10,6 +10,7 @@ class E_Canvas : public Fl_Widget
             iLeft, iTop, iWidth, iHeight,
             iCanvasLeft, iCanvasTop, iCanvasWidth, iCanvasHeight;
 
+        BGRectangle rctClip;
         BGPolygon plgFlat;
         BGPoint pntBinder;
 
@@ -105,15 +106,14 @@ class E_Canvas : public Fl_Widget
             pntMouse.x(round((float)pntMouse.x() / iWebStep) * iWebStep);
             pntMouse.y(round((float)pntMouse.y() / iWebStep) * iWebStep);
 
-            if (pntMouse.x() != pntBinder.x())
+            if (pntMouse.x() != pntBinder.x() || pntMouse.y() != pntBinder.y())
             {
                 changed = true;
+                rctClip.min_corner().x(pntBinder.x() - iBinderRadius);
+                rctClip.min_corner().y(pntBinder.y() - iBinderRadius);
+                rctClip.max_corner().x(pntBinder.x() + iBinderRadius + iLineWeight);
+                rctClip.max_corner().y(pntBinder.y() + iBinderRadius + iLineWeight);
                 pntBinder.x(pntMouse.x());
-            }
-
-            if (pntMouse.y() != pntBinder.y())
-            {
-                changed = true;
                 pntBinder.y(pntMouse.y());
             }
 
@@ -162,6 +162,11 @@ class E_Canvas : public Fl_Widget
             pntBinder.x(-1);
             pntBinder.y(-1);
 
+            rctClip.min_corner().x(-iLineWeight);
+            rctClip.min_corner().y(-iLineWeight);
+            rctClip.max_corner().x(iCanvasWidth + iLineWeight);
+            rctClip.max_corner().y(iCanvasHeight + iLineWeight);
+
             BG::append(plgFlat.outer(), BGPoint(0, 0));
             BG::append(plgFlat.outer(), BGPoint(0, iCanvasHeight));
             BG::append(plgFlat.outer(), BGPoint(iCanvasWidth, iCanvasHeight));
@@ -178,6 +183,19 @@ class E_Canvas : public Fl_Widget
 
         void draw()
         {
+            fl_push_clip(
+                rctClip.min_corner().x() + iCanvasLeft,
+                rctClip.min_corner().y() + iCanvasTop,
+                rctClip.max_corner().x() - rctClip.min_corner().x(),
+                rctClip.max_corner().y() - rctClip.min_corner().y());
+
+            fl_color(E_COLOR1);
+            fl_rectf(
+                iCanvasLeft - iBinderRadius,
+                iCanvasTop - iBinderRadius,
+                iCanvasLeft + iCanvasWidth + iBinderRadius,
+                iCanvasTop + iCanvasHeight + iBinderRadius);
+
             fl_color(E_COLOR2);
             fl_line_style(FL_SOLID, iWebLineWeight, NULL);
             drawWeb();
@@ -186,6 +204,8 @@ class E_Canvas : public Fl_Widget
             fl_line_style(FL_SOLID, iLineWeight, NULL);
             strokeFlat();
             drawFlat();
+
+            fl_pop_clip();
 
             fl_color(E_COLOR4);
             drawBinder();
