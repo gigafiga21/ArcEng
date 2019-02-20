@@ -10,6 +10,8 @@ class E_Canvas : public Fl_Widget
             iLeft, iTop, iWidth, iHeight,
             iCanvasLeft, iCanvasTop, iCanvasWidth, iCanvasHeight;
 
+        bool bDrawing;
+
         BGRectangle rctClip;
         BGPolygon plgFlat;
         BGPoint pntBinder;
@@ -124,6 +126,15 @@ class E_Canvas : public Fl_Widget
         {
             if (pntBinder.x() != -1)
             {
+                if (bDrawing)
+                {
+                    fl_color(E_COLOR3);
+                }
+                else
+                {
+                    fl_color(E_COLOR4);
+                }
+
                 fl_begin_complex_polygon();
                 fl_vertex(iCanvasLeft + pntBinder.x() - iBinderRadius, iCanvasTop + pntBinder.y());
                 fl_vertex(iCanvasLeft + pntBinder.x(), iCanvasTop + pntBinder.y() - iBinderRadius);
@@ -158,6 +169,8 @@ class E_Canvas : public Fl_Widget
             iCanvasHeight = 280;
             iCanvasLeft = iLeft + (iWidth - iCanvasWidth) / 2;
             iCanvasTop = iTop + (iHeight - iCanvasHeight) / 2;
+
+            bDrawing = false;
 
             pntBinder.x(-1);
             pntBinder.y(-1);
@@ -207,7 +220,6 @@ class E_Canvas : public Fl_Widget
 
             fl_pop_clip();
 
-            fl_color(E_COLOR4);
             drawBinder();
         }
 
@@ -218,6 +230,16 @@ class E_Canvas : public Fl_Widget
             switch(iEvent)
             {
                 case FL_ENTER:
+                    return 1;
+
+                case FL_PUSH:
+                    bDrawing = true;
+                    redraw();
+                    return 1;
+
+                case FL_RELEASE:
+                    bDrawing = false;
+                    redraw();
                     return 1;
 
                 case FL_MOVE:
