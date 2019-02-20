@@ -14,7 +14,7 @@ class E_Canvas : public Fl_Widget
 
         BGRectangle rctClip;
         BGPolygon plgFlat;
-        BGPoint pntBinder;
+        BGPoint pntBinder, pntDrawingStart;
 
         void cropLine(BGPolygon plgPolygon, int x1, int y1, int x2, int y2)
         {
@@ -89,17 +89,28 @@ class E_Canvas : public Fl_Widget
             }
         }
 
-        bool updateBinder(int x, int y)
+        bool pointerInCanvas(BGPoint pntPointer)
         {
             BGPolygon plgOuter;
-            BGPoint pntMouse(x - iCanvasLeft, y - iCanvasTop);
 
             for (int iCounter = 0; iCounter < plgFlat.outer().size(); iCounter++)
             {
                 BG::append(plgOuter.outer(), plgFlat.outer()[iCounter]);
             }
 
-            if (!BG::within(pntMouse, plgOuter))
+            if (BG::within(pntPointer, plgOuter))
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        bool updateBinder(int x, int y)
+        {
+            BGPoint pntMouse(x - iCanvasLeft, y - iCanvasTop);
+
+            if (!pointerInCanvas(pntMouse))
             {
                 return false;
             }
@@ -233,7 +244,15 @@ class E_Canvas : public Fl_Widget
                     return 1;
 
                 case FL_PUSH:
+                    std::cout << Fl::event_x() << ' ' << Fl::event_y() << std::endl;
+                    if (!pointerInCanvas(BGPoint(Fl::event_x() - iCanvasLeft, Fl::event_y() - iCanvasTop)))
+                    {
+                        return 0;
+                    }
+
                     bDrawing = true;
+                    pntDrawingStart.x(pntBinder.x());
+                    pntDrawingStart.y(pntBinder.y());
                     redraw();
                     return 1;
 
