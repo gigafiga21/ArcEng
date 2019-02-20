@@ -1,93 +1,136 @@
 #include <iostream>
+#include <vector>
+#include <cmath>
 
 class E_Canvas : public Fl_Widget
 {
     private:
 
-        int iStrokeStep, iLineWeight, iWallWeight,
+        int iStrokeStep, iLineWeight, iWebLineWeight, iWallWeight, iWebStep, iBinderRadius,
             iLeft, iTop, iWidth, iHeight,
             iCanvasLeft, iCanvasTop, iCanvasWidth, iCanvasHeight;
 
+        BGRectangle rctClip;
         BGPolygon plgFlat;
+        BGPoint pntBinder;
+
+        void cropLine(BGPolygon plgPolygon, int x1, int y1, int x2, int y2)
+        {
+            BGPolyLine plnLine;
+            std::vector<BGPolyLine> aplnLines;
+
+            BG::append(plnLine, BGPoint(x1, y1));
+            BG::append(plnLine, BGPoint(x2, y2));
+            BG::intersection(plgPolygon, plnLine, aplnLines);
+
+            for (int iLine = 0; iLine < aplnLines.size(); iLine++)
+            {
+                fl_line(
+                    iCanvasLeft + aplnLines[iLine][0].x(),
+                    iCanvasTop + aplnLines[iLine][0].y(),
+                    iCanvasLeft + aplnLines[iLine][1].x(),
+                    iCanvasTop + aplnLines[iLine][1].y());
+            }
+        }
+
+        void drawWeb()
+        {
+            for (int iInner = 0; iInner < plgFlat.inners().size(); iInner++)
+            {
+                BGPolygon plgInner;
+                for (int iCounter = plgFlat.inners()[iInner].size() - 1; iCounter >= 0 ; iCounter--)
+                {
+                    BG::append(plgInner.outer(), plgFlat.inners()[iInner][iCounter]);
+                }
+
+                for (int iCoord = 0; iCoord < iCanvasWidth; iCoord += iWebStep)
+                {
+                    cropLine(plgInner, iCoord, iLineWeight, iCoord, iCanvasHeight - 2 * iLineWeight);
+                }
+
+                for (int iCoord = 0; iCoord < iCanvasHeight - 2 * iLineWeight; iCoord += iWebStep)
+                {
+                    cropLine(plgInner, iLineWeight, iCoord, iCanvasWidth - iLineWeight, iCoord);
+                }
+            }
+        }
 
         void strokeFlat()
         {
-            fl_push_clip(iCanvasLeft, iCanvasTop, iCanvasWidth, iCanvasHeight);
-
             for (int iCounter = 0; iCounter < iCanvasWidth + iCanvasHeight; iCounter += iStrokeStep)
             {
-                fl_line(iCanvasLeft + iCounter, iCanvasTop, iCanvasLeft, iCanvasTop + iCounter);
+                cropLine(plgFlat, iCounter, 0, 0, iCounter);
             }
-
-            fl_pop_clip();
         }
 
-        void drawFlatOuter()
+        void drawFlat()
         {
-            std::vector<BGPoint> vptFlatOuter = plgFlat.outer();
+            std::vector<BGPoint> apntOuter = plgFlat.outer();
 
-            fl_color(E_COLOR1);
-            fl_begin_complex_polygon();
-            fl_vertex(iCanvasLeft - 1, iCanvasTop - 1);
-            fl_vertex(iCanvasLeft + iCanvasWidth + 1, iCanvasTop - 1);
-            fl_vertex(iCanvasLeft + iCanvasWidth + 1, iCanvasTop + iCanvasHeight + 1);
-            fl_vertex(iCanvasLeft - 1, iCanvasTop + iCanvasHeight + 1);
-            fl_vertex(iCanvasLeft - 1, iCanvasTop - 1);
-            fl_gap();
-
-            for (int iCounter = 0; iCounter < vptFlatOuter.size(); iCounter++)
-            {
-                fl_vertex(vptFlatOuter[iCounter].x() + iCanvasLeft, vptFlatOuter[iCounter].y() + iCanvasTop);
-            }
-
-            fl_end_complex_polygon();
-
-            fl_color(E_COLOR3);
             fl_begin_loop();
-            fl_vertex(iCanvasLeft, iCanvasTop);
-            fl_vertex(iCanvasLeft + iCanvasWidth, iCanvasTop);
-            fl_vertex(iCanvasLeft + iCanvasWidth, iCanvasTop + iCanvasHeight);
-            fl_vertex(iCanvasLeft, iCanvasTop + iCanvasHeight);
-            fl_vertex(iCanvasLeft, iCanvasTop);
-            fl_end_loop();
-        }
-
-        void pushFlatInnersVerteces(bool bFilled)
-        {
-            for (int iInnerIndex = 0; iInnerIndex < plgFlat.inners().size(); iInnerIndex++)
+            for (int iVertex = 0; iVertex < apntOuter.size(); iVertex++)
             {
-                std::vector<BGPoint> vptFlatInner = plgFlat.inners()[iInnerIndex];
+                fl_vertex(iCanvasLeft + apntOuter[iVertex].x(), iCanvasTop + apntOuter[iVertex].y());
+            }
+            fl_end_loop();
 
-                if (!bFilled)
-                {
-                    fl_begin_loop();
-                }
+            for (int iInner = 0; iInner < plgFlat.inners().size(); iInner++)
+            {
+                std::vector<BGPoint> apntInner = plgFlat.inners()[iInner];
 
-                for (int iCounter = 0; iCounter < vptFlatInner.size(); iCounter++)
+                fl_begin_loop();
+                for (int iVertex = 0; iVertex < apntOuter.size(); iVertex++)
                 {
-                    fl_vertex(vptFlatInner[iCounter].x() + iCanvasLeft, vptFlatInner[iCounter].y() + iCanvasTop);
+                    fl_vertex(iCanvasLeft + apntInner[iVertex].x(), iCanvasTop + apntInner[iVertex].y());
                 }
-
-                if (!bFilled)
-                {
-                    fl_end_loop();
-                }
-                else
-                {
-                    fl_gap();
-                }
+                fl_end_loop();
             }
         }
 
-        void drawFlatInners()
+        bool updateBinder(int x, int y)
         {
-            fl_color(E_COLOR1);
-            fl_begin_complex_polygon();
-            pushFlatInnersVerteces(true);
-            fl_end_complex_polygon();
+            BGPolygon plgOuter;
+            BGPoint pntMouse(x - iCanvasLeft, y - iCanvasTop);
 
-            fl_color(E_COLOR3);
-            pushFlatInnersVerteces(false);
+            for (int iCounter = 0; iCounter < plgFlat.outer().size(); iCounter++)
+            {
+                BG::append(plgOuter.outer(), plgFlat.outer()[iCounter]);
+            }
+
+            if (!BG::within(pntMouse, plgOuter))
+            {
+                return false;
+            }
+
+            bool changed = false;
+            pntMouse.x(round((float)pntMouse.x() / iWebStep) * iWebStep);
+            pntMouse.y(round((float)pntMouse.y() / iWebStep) * iWebStep);
+
+            if (pntMouse.x() != pntBinder.x() || pntMouse.y() != pntBinder.y())
+            {
+                changed = true;
+                rctClip.min_corner().x(pntBinder.x() - iBinderRadius);
+                rctClip.min_corner().y(pntBinder.y() - iBinderRadius);
+                rctClip.max_corner().x(pntBinder.x() + iBinderRadius + iLineWeight);
+                rctClip.max_corner().y(pntBinder.y() + iBinderRadius + iLineWeight);
+                pntBinder.x(pntMouse.x());
+                pntBinder.y(pntMouse.y());
+            }
+
+            return changed;
+        }
+
+        void drawBinder()
+        {
+            if (pntBinder.x() != -1)
+            {
+                fl_begin_complex_polygon();
+                fl_vertex(iCanvasLeft + pntBinder.x() - iBinderRadius, iCanvasTop + pntBinder.y());
+                fl_vertex(iCanvasLeft + pntBinder.x(), iCanvasTop + pntBinder.y() - iBinderRadius);
+                fl_vertex(iCanvasLeft + pntBinder.x() + iBinderRadius, iCanvasTop + pntBinder.y());
+                fl_vertex(iCanvasLeft + pntBinder.x(), iCanvasTop + pntBinder.y() + iBinderRadius);
+                fl_end_complex_polygon();
+            }
         }
 
     public:
@@ -100,23 +143,34 @@ class E_Canvas : public Fl_Widget
             sGivenLabel)
         {
             iStrokeStep = 5;
+            iWebStep = 16;
+            iWebLineWeight = 1;
             iLineWeight = 2;
             iWallWeight = 8;
+            iBinderRadius = 3;
 
             iLeft = iGivenLeft + iLineWeight;
             iTop = iGivenTop + iLineWeight;
             iWidth = iGivenWidth;
             iHeight = iGivenHeight;
 
-            iCanvasLeft = iLeft + 30;
-            iCanvasTop = (iHeight - 265) / 2;
-            iCanvasWidth = iWidth - 60;
-            iCanvasHeight = 265;
+            iCanvasWidth = 384;
+            iCanvasHeight = 280;
+            iCanvasLeft = iLeft + (iWidth - iCanvasWidth) / 2;
+            iCanvasTop = iTop + (iHeight - iCanvasHeight) / 2;
+
+            pntBinder.x(-1);
+            pntBinder.y(-1);
+
+            rctClip.min_corner().x(-iLineWeight);
+            rctClip.min_corner().y(-iLineWeight);
+            rctClip.max_corner().x(iCanvasWidth + iLineWeight);
+            rctClip.max_corner().y(iCanvasHeight + iLineWeight);
 
             BG::append(plgFlat.outer(), BGPoint(0, 0));
-            BG::append(plgFlat.outer(), BGPoint(iCanvasWidth, 0));
-            BG::append(plgFlat.outer(), BGPoint(iCanvasWidth, iCanvasHeight));
             BG::append(plgFlat.outer(), BGPoint(0, iCanvasHeight));
+            BG::append(plgFlat.outer(), BGPoint(iCanvasWidth, iCanvasHeight));
+            BG::append(plgFlat.outer(), BGPoint(iCanvasWidth, 0));
             BG::append(plgFlat.outer(), BGPoint(0, 0));
 
             plgFlat.inners().resize(1);
@@ -129,11 +183,49 @@ class E_Canvas : public Fl_Widget
 
         void draw()
         {
-            fl_line_style(FL_SOLID, iLineWeight, NULL);
+            fl_push_clip(
+                rctClip.min_corner().x() + iCanvasLeft,
+                rctClip.min_corner().y() + iCanvasTop,
+                rctClip.max_corner().x() - rctClip.min_corner().x(),
+                rctClip.max_corner().y() - rctClip.min_corner().y());
+
+            fl_color(E_COLOR1);
+            fl_rectf(
+                iCanvasLeft - iBinderRadius,
+                iCanvasTop - iBinderRadius,
+                iCanvasLeft + iCanvasWidth + iBinderRadius,
+                iCanvasTop + iCanvasHeight + iBinderRadius);
+
+            fl_color(E_COLOR2);
+            fl_line_style(FL_SOLID, iWebLineWeight, NULL);
+            drawWeb();
 
             fl_color(E_COLOR3);
+            fl_line_style(FL_SOLID, iLineWeight, NULL);
             strokeFlat();
-            drawFlatOuter();
-            drawFlatInners();
+            drawFlat();
+
+            fl_pop_clip();
+
+            fl_color(E_COLOR4);
+            drawBinder();
+        }
+
+    protected:
+
+        int handle(int iEvent)
+        {
+            switch(iEvent)
+            {
+                case FL_ENTER:
+                    return 1;
+
+                case FL_MOVE:
+                    if (updateBinder(Fl::event_x(), Fl::event_y()))
+                    {
+                        redraw();
+                    }
+                    return 1;
+            }
         }
 };
