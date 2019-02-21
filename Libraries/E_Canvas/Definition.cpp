@@ -126,8 +126,33 @@ class E_Canvas : public Fl_Widget
                 rctClip.min_corner().y(pntBinder.y() - iBinderRadius);
                 rctClip.max_corner().x(pntBinder.x() + iBinderRadius + iLineWeight);
                 rctClip.max_corner().y(pntBinder.y() + iBinderRadius + iLineWeight);
-                pntBinder.x(pntMouse.x());
-                pntBinder.y(pntMouse.y());
+
+                if (bDrawing && pntMouse.x() - pntDrawingStart.x() != 0)
+                {
+                    if (abs((pntMouse.y() - pntDrawingStart.y()) / (pntMouse.x() - pntDrawingStart.x())) > 1)
+                    {
+                        if (pntMouse.y() == pntBinder.y())
+                        {
+                            return false;
+                        }
+                        pntBinder.x(pntDrawingStart.x());
+                        pntBinder.y(pntMouse.y());
+                    }
+                    else
+                    {
+                        if (pntMouse.x() == pntBinder.x())
+                        {
+                            return false;
+                        }
+                        pntBinder.y(pntDrawingStart.y());
+                        pntBinder.x(pntMouse.x());
+                    }
+                }
+                else
+                {
+                    pntBinder.x(pntMouse.x());
+                    pntBinder.y(pntMouse.y());
+                }
             }
 
             return changed;
@@ -141,6 +166,14 @@ class E_Canvas : public Fl_Widget
             fl_vertex(iCanvasLeft + pntTarget.x() + iBinderRadius, iCanvasTop + pntTarget.y());
             fl_vertex(iCanvasLeft + pntTarget.x(), iCanvasTop + pntTarget.y() + iBinderRadius);
             fl_end_complex_polygon();
+        }
+
+        void freeClip()
+        {
+            rctClip.min_corner().x(-iLineWeight);
+            rctClip.min_corner().y(-iLineWeight);
+            rctClip.max_corner().x(iCanvasWidth + iLineWeight);
+            rctClip.max_corner().y(iCanvasHeight + iLineWeight);
         }
 
     public:
@@ -174,10 +207,7 @@ class E_Canvas : public Fl_Widget
             pntBinder.x(-1);
             pntBinder.y(-1);
 
-            rctClip.min_corner().x(-iLineWeight);
-            rctClip.min_corner().y(-iLineWeight);
-            rctClip.max_corner().x(iCanvasWidth + iLineWeight);
-            rctClip.max_corner().y(iCanvasHeight + iLineWeight);
+            freeClip();
 
             BG::append(plgFlat.outer(), BGPoint(0, 0));
             BG::append(plgFlat.outer(), BGPoint(0, iCanvasHeight));
@@ -254,21 +284,15 @@ class E_Canvas : public Fl_Widget
                     return 1;
 
                 case FL_DRAG:
-                    std::cout << "drag" << std::endl;
                     if (updateBinder(Fl::event_x(), Fl::event_y()))
                     {
-                        std::cout << "redraw" << std::endl;
                         redraw();
                     }
                     return 0;
 
                 case FL_RELEASE:
-                    std::cout << "released" << std::endl;
                     bDrawing = false;
-                    rctClip.min_corner().x(-iLineWeight);
-                    rctClip.min_corner().y(-iLineWeight);
-                    rctClip.max_corner().x(iCanvasWidth + iLineWeight);
-                    rctClip.max_corner().y(iCanvasHeight + iLineWeight);
+                    freeClip();
                     redraw();
 
                 case FL_MOVE:
