@@ -133,26 +133,14 @@ class E_Canvas : public Fl_Widget
             return changed;
         }
 
-        void drawBinder()
+        void drawBinder(BGPoint pntTarget)
         {
-            if (pntBinder.x() != -1)
-            {
-                if (bDrawing)
-                {
-                    fl_color(E_COLOR3);
-                }
-                else
-                {
-                    fl_color(E_COLOR4);
-                }
-
-                fl_begin_complex_polygon();
-                fl_vertex(iCanvasLeft + pntBinder.x() - iBinderRadius, iCanvasTop + pntBinder.y());
-                fl_vertex(iCanvasLeft + pntBinder.x(), iCanvasTop + pntBinder.y() - iBinderRadius);
-                fl_vertex(iCanvasLeft + pntBinder.x() + iBinderRadius, iCanvasTop + pntBinder.y());
-                fl_vertex(iCanvasLeft + pntBinder.x(), iCanvasTop + pntBinder.y() + iBinderRadius);
-                fl_end_complex_polygon();
-            }
+            fl_begin_complex_polygon();
+            fl_vertex(iCanvasLeft + pntTarget.x() - iBinderRadius, iCanvasTop + pntTarget.y());
+            fl_vertex(iCanvasLeft + pntTarget.x(), iCanvasTop + pntTarget.y() - iBinderRadius);
+            fl_vertex(iCanvasLeft + pntTarget.x() + iBinderRadius, iCanvasTop + pntTarget.y());
+            fl_vertex(iCanvasLeft + pntTarget.x(), iCanvasTop + pntTarget.y() + iBinderRadius);
+            fl_end_complex_polygon();
         }
 
     public:
@@ -231,7 +219,17 @@ class E_Canvas : public Fl_Widget
 
             fl_pop_clip();
 
-            drawBinder();
+            if (bDrawing)
+            {
+                fl_color(E_COLOR3);
+                drawBinder(pntBinder);
+                drawBinder(pntDrawingStart);
+            }
+            else
+            {
+                fl_color(E_COLOR4);
+                drawBinder(pntBinder);
+            }
         }
 
     protected:
@@ -244,7 +242,6 @@ class E_Canvas : public Fl_Widget
                     return 1;
 
                 case FL_PUSH:
-                    std::cout << Fl::event_x() << ' ' << Fl::event_y() << std::endl;
                     if (!pointerInCanvas(BGPoint(Fl::event_x() - iCanvasLeft, Fl::event_y() - iCanvasTop)))
                     {
                         return 0;
@@ -256,10 +253,23 @@ class E_Canvas : public Fl_Widget
                     redraw();
                     return 1;
 
+                case FL_DRAG:
+                    std::cout << "drag" << std::endl;
+                    if (updateBinder(Fl::event_x(), Fl::event_y()))
+                    {
+                        std::cout << "redraw" << std::endl;
+                        redraw();
+                    }
+                    return 0;
+
                 case FL_RELEASE:
+                    std::cout << "released" << std::endl;
                     bDrawing = false;
+                    rctClip.min_corner().x(-iLineWeight);
+                    rctClip.min_corner().y(-iLineWeight);
+                    rctClip.max_corner().x(iCanvasWidth + iLineWeight);
+                    rctClip.max_corner().y(iCanvasHeight + iLineWeight);
                     redraw();
-                    return 1;
 
                 case FL_MOVE:
                     if (updateBinder(Fl::event_x(), Fl::event_y()))
