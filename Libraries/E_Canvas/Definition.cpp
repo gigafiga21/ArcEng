@@ -13,10 +13,10 @@ class E_Canvas : public Fl_Widget
         bool bDrawing;
 
         BGRectangle rctClip;
-        BGPolygon plgFlat;
+        BGMultiPolygon plgFlat;
         BGPoint pntBinder, pntDrawingStart;
 
-        void cropLine(BGPolygon plgPolygon, int x1, int y1, int x2, int y2)
+        void cropLine(BGMultiPolygon plgPolygon, int x1, int y1, int x2, int y2)
         {
             BGPolyLine plnLine;
             std::vector<BGPolyLine> aplnLines;
@@ -35,7 +35,7 @@ class E_Canvas : public Fl_Widget
             }
         }
 
-        void drawWeb()
+        /*void drawWeb()
         {
             for (int iInner = 0; iInner < plgFlat.inners().size(); iInner++)
             {
@@ -55,7 +55,7 @@ class E_Canvas : public Fl_Widget
                     cropLine(plgInner, iLineWeight, iCoord, iCanvasWidth - iLineWeight, iCoord);
                 }
             }
-        }
+        }*/
 
         void strokeFlat()
         {
@@ -67,25 +67,28 @@ class E_Canvas : public Fl_Widget
 
         void drawFlat()
         {
-            std::vector<BGPoint> apntOuter = plgFlat.outer();
-
-            fl_begin_loop();
-            for (int iVertex = 0; iVertex < apntOuter.size(); iVertex++)
+            for (int iPolygon = 0; iPolygon < plgFlat.size(); iPolygon++)
             {
-                fl_vertex(iCanvasLeft + apntOuter[iVertex].x(), iCanvasTop + apntOuter[iVertex].y());
-            }
-            fl_end_loop();
-
-            for (int iInner = 0; iInner < plgFlat.inners().size(); iInner++)
-            {
-                std::vector<BGPoint> apntInner = plgFlat.inners()[iInner];
+                std::vector<BGPoint> apntOuter = plgFlat[iPolygon].outer();
 
                 fl_begin_loop();
                 for (int iVertex = 0; iVertex < apntOuter.size(); iVertex++)
                 {
-                    fl_vertex(iCanvasLeft + apntInner[iVertex].x(), iCanvasTop + apntInner[iVertex].y());
+                    fl_vertex(iCanvasLeft + apntOuter[iVertex].x(), iCanvasTop + apntOuter[iVertex].y());
                 }
                 fl_end_loop();
+
+                for (int iInner = 0; iInner < plgFlat[iPolygon].inners().size(); iInner++)
+                {
+                    std::vector<BGPoint> apntInner = plgFlat[iPolygon].inners()[iInner];
+
+                    fl_begin_loop();
+                    for (int iVertex = 0; iVertex < apntOuter.size(); iVertex++)
+                    {
+                        fl_vertex(iCanvasLeft + apntInner[iVertex].x(), iCanvasTop + apntInner[iVertex].y());
+                    }
+                    fl_end_loop();
+                }
             }
         }
 
@@ -93,9 +96,9 @@ class E_Canvas : public Fl_Widget
         {
             BGPolygon plgOuter;
 
-            for (int iCounter = 0; iCounter < plgFlat.outer().size(); iCounter++)
+            for (int iCounter = 0; iCounter < plgFlat[0].outer().size(); iCounter++)
             {
-                BG::append(plgOuter.outer(), plgFlat.outer()[iCounter]);
+                BG::append(plgOuter.outer(), plgFlat[0].outer()[iCounter]);
             }
 
             if (BG::within(pntPointer, plgOuter))
@@ -209,18 +212,19 @@ class E_Canvas : public Fl_Widget
 
             freeClip();
 
-            BG::append(plgFlat.outer(), BGPoint(0, 0));
-            BG::append(plgFlat.outer(), BGPoint(0, iCanvasHeight));
-            BG::append(plgFlat.outer(), BGPoint(iCanvasWidth, iCanvasHeight));
-            BG::append(plgFlat.outer(), BGPoint(iCanvasWidth, 0));
-            BG::append(plgFlat.outer(), BGPoint(0, 0));
+            plgFlat.resize(1);
+            BG::append(plgFlat[0].outer(), BGPoint(0, 0));
+            BG::append(plgFlat[0].outer(), BGPoint(0, iCanvasHeight));
+            BG::append(plgFlat[0].outer(), BGPoint(iCanvasWidth, iCanvasHeight));
+            BG::append(plgFlat[0].outer(), BGPoint(iCanvasWidth, 0));
+            BG::append(plgFlat[0].outer(), BGPoint(0, 0));
 
-            plgFlat.inners().resize(1);
-            BG::append(plgFlat.inners()[0], BGPoint(iWallWeight, iWallWeight));
-            BG::append(plgFlat.inners()[0], BGPoint(iCanvasWidth - iWallWeight, iWallWeight));
-            BG::append(plgFlat.inners()[0], BGPoint(iCanvasWidth - iWallWeight, iCanvasHeight - iWallWeight));
-            BG::append(plgFlat.inners()[0], BGPoint(iWallWeight, iCanvasHeight - iWallWeight));
-            BG::append(plgFlat.inners()[0], BGPoint(iWallWeight, iWallWeight));
+            plgFlat[0].inners().resize(1);
+            BG::append(plgFlat[0].inners()[0], BGPoint(iWallWeight, iWallWeight));
+            BG::append(plgFlat[0].inners()[0], BGPoint(iCanvasWidth - iWallWeight, iWallWeight));
+            BG::append(plgFlat[0].inners()[0], BGPoint(iCanvasWidth - iWallWeight, iCanvasHeight - iWallWeight));
+            BG::append(plgFlat[0].inners()[0], BGPoint(iWallWeight, iCanvasHeight - iWallWeight));
+            BG::append(plgFlat[0].inners()[0], BGPoint(iWallWeight, iWallWeight));
         }
 
         void draw()
@@ -240,7 +244,7 @@ class E_Canvas : public Fl_Widget
 
             fl_color(E_COLOR2);
             fl_line_style(FL_SOLID, iWebLineWeight, NULL);
-            drawWeb();
+            //drawWeb();
 
             fl_color(E_COLOR3);
             fl_line_style(FL_SOLID, iLineWeight, NULL);
