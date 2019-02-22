@@ -1,7 +1,3 @@
-#include <iostream>
-#include <vector>
-#include <cmath>
-
 class E_Canvas : public Fl_Widget
 {
     private:
@@ -83,7 +79,7 @@ class E_Canvas : public Fl_Widget
                     std::vector<BGPoint> apntInner = plgFlat[iPolygon].inners()[iInner];
 
                     fl_begin_loop();
-                    for (int iVertex = 0; iVertex < apntOuter.size(); iVertex++)
+                    for (int iVertex = 0; iVertex < apntInner.size(); iVertex++)
                     {
                         fl_vertex(iCanvasLeft + apntInner[iVertex].x(), iCanvasTop + apntInner[iVertex].y());
                     }
@@ -177,6 +173,51 @@ class E_Canvas : public Fl_Widget
             rctClip.min_corner().y(-iLineWeight);
             rctClip.max_corner().x(iCanvasWidth + iLineWeight);
             rctClip.max_corner().y(iCanvasHeight + iLineWeight);
+        }
+
+        void updateFlat()
+        {
+            BGRectangle rctWall;
+            BGMultiPolygon plgPreviousFlat = plgFlat;
+
+            if (pntBinder.x() == pntDrawingStart.x())
+            {
+                if (pntBinder.y() < pntDrawingStart.y())
+                {
+                    rctWall.min_corner().x(pntBinder.x() - iWallWeight / 2);
+                    rctWall.min_corner().y(pntBinder.y());
+                    rctWall.max_corner().x(pntDrawingStart.x() + iWallWeight / 2);
+                    rctWall.max_corner().y(pntDrawingStart.y());
+                }
+                else
+                {
+                    rctWall.min_corner().x(pntDrawingStart.x() - iWallWeight / 2);
+                    rctWall.min_corner().y(pntDrawingStart.y());
+                    rctWall.max_corner().x(pntBinder.x() + iWallWeight / 2);
+                    rctWall.max_corner().y(pntBinder.y());
+                }
+            }
+            else
+            {
+                if (pntBinder.x() < pntDrawingStart.x())
+                {
+                    rctWall.min_corner().x(pntBinder.x());
+                    rctWall.min_corner().y(pntBinder.y() - iWallWeight / 2);
+                    rctWall.max_corner().x(pntDrawingStart.x());
+                    rctWall.max_corner().y(pntDrawingStart.y() + iWallWeight / 2);
+                }
+                else
+                {
+                    rctWall.min_corner().x(pntDrawingStart.x());
+                    rctWall.min_corner().y(pntDrawingStart.y() - iWallWeight / 2);
+                    rctWall.max_corner().x(pntBinder.x());
+                    rctWall.max_corner().y(pntBinder.y() + iWallWeight / 2);
+                }
+            }
+
+            BG::clear(plgFlat);
+            BG::union_(plgPreviousFlat, rctWall, plgFlat);
+            print(plgFlat);
         }
 
     public:
@@ -296,6 +337,7 @@ class E_Canvas : public Fl_Widget
 
                 case FL_RELEASE:
                     bDrawing = false;
+                    updateFlat();
                     freeClip();
                     redraw();
 
